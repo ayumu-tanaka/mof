@@ -32,7 +32,7 @@
 1. [現代的な重力方程式のパネル推定 with fixest](https://rpubs.com/ayumuR/gravity_fixest_panel)
 1. [重力方程式を用いた2元固定効果差の差推定](https://rpubs.com/ayumuR/gravity_fixest_twfe)
 1. [重力方程式を用いた多期間差の差推定](https://rpubs.com/ayumuR/gravity_fixest_es)
-
+1. [ggplot2で貿易フローの地図を作成](https://rpubs.com/ayumuR/trade_flow_ggplot2)
 
 ## 教科書
 伊藤萬里・田中鮎夢（2023）[『現実からまなぶ国際経済学』](https://www.yuhikaku.co.jp/books/detail/9784641200012)（有斐閣）
