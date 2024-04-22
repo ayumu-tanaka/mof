@@ -32,7 +32,7 @@
 
 その他、教科書巻末に文献紹介があります。
 
-## R実習
+## VI. R実習
 
 1. [貿易データの分析](https://rpubs.com/ayumuR/trade_data)
 1. [伝統的な重力方程式の推定](https://rpubs.com/ayumuR/gravity_explanation)
