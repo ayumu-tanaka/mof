@@ -8,7 +8,7 @@
 
 ### 講義（全８回）
 
-1.	５月13日（月）15:20～16:50 [序章 グローバル化とは](slides/00国際経済学は社会にどう役立つか.pptx)、重力方程式、Posit Cloudの導入。
+1.	５月13日（月）15:20～16:50 [序章 グローバル化とは](slides/00国際経済学は社会にどう役立つか.pptx)、[重力方程式](trade2-03-gravity.pdf)、[Posit Cloudの導入](slides/StataとRの利点.pptx)。
 1.	５月14日（火）15:20～16:50 [3 章 企業のグローバル化](slides/03企業のグローバル化.pptx)
 1.	５月20日（月）15:20～16:50 [4 章 技術が貿易を決める: リカード・モデル](slides/04技術が貿易を決めるリカードモデルv2.pptx)
 1.	５月21日（火）15:20～16:50 [5 章 生産要素が貿易を決める: 要素比率理論](05生産要素が貿易を決めるv2.pptx)
@@ -31,6 +31,15 @@
 田中鮎夢（2015）『新々貿易理論とは何か: 企業の異質性と21世紀の国際経済』ミネルヴァ書房。
 
 その他、教科書巻末に文献紹介があります。
+
+## VI. R実習
+
+1. [貿易データの分析](https://rpubs.com/ayumuR/trade_data)
+1. [伝統的な重力方程式の推定](https://rpubs.com/ayumuR/gravity_explanation)
+1. [重力方程式 with fixest](https://rpubs.com/ayumuR/gravity_fixest)
+1. [現代的な重力方程式のパネル推定 with fixest](https://rpubs.com/ayumuR/gravity_fixest_panel)
+1. [重力方程式を用いた2元固定効果差の差推定](https://rpubs.com/ayumuR/gravity_fixest_twfe)
+1. [重力方程式を用いた多期間差の差推定](https://rpubs.com/ayumuR/gravity_fixest_es)
 
 
 
