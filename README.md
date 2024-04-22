@@ -28,8 +28,9 @@
 - 正誤表が出版社のHPにあります。
 
 ## Ⅴ．参考文献
-田中鮎夢（2015）『新々貿易理論とは何か: 企業の異質性と21世紀の国際経済』ミネルヴァ書房。
-- 元原稿：RIETI、[国際貿易と貿易政策研究メモ](https://www.rieti.go.jp/users/tanaka-ayumu/serial/index.html)
+1. 田中鮎夢（2015）『新々貿易理論とは何か: 企業の異質性と21世紀の国際経済』ミネルヴァ書房。
+  - 元原稿：RIETI、[国際貿易と貿易政策研究メモ](https://www.rieti.go.jp/users/tanaka-ayumu/serial/index.html)
+1. 「やさしい経済学―国際貿易論の新しい潮流」(https://www.rieti.go.jp/jp/papers/contribution/yasashii23/index.html)
 
 その他、教科書巻末に文献紹介があります。
 
