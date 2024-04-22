@@ -32,6 +32,15 @@
 
 その他、教科書巻末に文献紹介があります。
 
+## R実習
+
+1. [貿易データの分析](https://rpubs.com/ayumuR/trade_data)
+1. [伝統的な重力方程式の推定](https://rpubs.com/ayumuR/gravity_explanation)
+1. [重力方程式 with fixest](https://rpubs.com/ayumuR/gravity_fixest)
+1. [現代的な重力方程式のパネル推定 with fixest](https://rpubs.com/ayumuR/gravity_fixest_panel)
+1. [重力方程式を用いた2元固定効果差の差推定](https://rpubs.com/ayumuR/gravity_fixest_twfe)
+1. [重力方程式を用いた多期間差の差推定](https://rpubs.com/ayumuR/gravity_fixest_es)
+
 
 
 
