@@ -26,6 +26,8 @@
 
 第2回以降以下のトピックを１つずつ進めて行ければ理想的ですが、実際には状況を見ながら、できる範囲で進めていきます。
 
+実習に用いるデータは[ここ](R)からダウンロードできます。
+
 1. [貿易データの分析](https://rpubs.com/ayumuR/trade_data)
 1. [伝統的な重力方程式の推定](https://rpubs.com/ayumuR/gravity_explanation)
 1. [重力方程式 with fixest](https://rpubs.com/ayumuR/gravity_fixest)
@@ -34,7 +36,7 @@
 1. [重力方程式を用いた多期間差の差推定](https://rpubs.com/ayumuR/gravity_fixest_es)
 1. [ggplot2で貿易フローの地図を作成](https://rpubs.com/ayumuR/trade_flow_ggplot2)
 
-- [データ](R)
+
 
 ## 教科書
 伊藤萬里・田中鮎夢（2023）[『現実からまなぶ国際経済学』](https://www.yuhikaku.co.jp/books/detail/9784641200012)（有斐閣）
