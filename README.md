@@ -14,8 +14,7 @@
 
 ### 講義（90分、全８回）
 
-1.	５月13日（月）15:20～16:50　　 [序章 グローバル化とは](slides/00国際経済学は社会にどう役立つか.pptx)、[重力方程式](slides/trade2-03-gravity.pdf)、[Posit Cloudの導入](slides/StataとRの利点.pptx)。
-  - 参考）[R Markdown入門](https://kazutan.github.io/kazutanR/Rmd_intro.html) / [RStudio入門](https://shunichinomura.github.io/cloud.html)
+1.	５月13日（月）15:20～16:50　　 [序章 グローバル化とは](slides/00国際経済学は社会にどう役立つか.pptx)、[重力方程式](slides/trade2-03-gravity.pdf)、[StataとRの利点](slides/StataとRの利点.pptx)。
 1.	５月14日（火）15:20～16:50　　 [3 章 企業のグローバル化](slides/03企業のグローバル化.pptx)
 1.	５月20日（月）15:20～16:50　　 [4 章 技術が貿易を決める: リカード・モデル](slides/04技術が貿易を決めるリカードモデルv2.pptx)
 1.	５月21日（火）15:20～16:50　　 [5 章 生産要素が貿易を決める: 要素比率理論](05生産要素が貿易を決めるv2.pptx)
@@ -38,6 +37,9 @@
 1. [重力方程式を用いた多期間差の差推定](https://rpubs.com/ayumuR/gravity_fixest_es)
 1. [ggplot2で貿易フローの地図を作成](https://rpubs.com/ayumuR/trade_flow_ggplot2)
 
+#### 参考
+- [R Markdown入門](https://kazutan.github.io/kazutanR/Rmd_intro.html)
+- [RStudio入門](https://shunichinomura.github.io/cloud.html)
 
 
 ## 教科書
