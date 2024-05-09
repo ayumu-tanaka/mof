@@ -25,6 +25,8 @@
 
 ### R実習
 
+#### 準備
+
 第2回開始までに、以下の資料でR/Posit Cloudの基本的な使い方を習得して下さい。
 - [R01_Posit_Cloudアカウント作成方法.pdf](R_practice/R01_Posit_Cloudアカウント作成方法.pdf)
 - [R02_Posit_CloudのProjectの共有方法.pdf](R_practice/R02_Posit_CloudのProjectの共有方法.pdf)
@@ -32,7 +34,7 @@
 - [R04_R_Markdownの使い方.pdf](R_practice/R04_R_Markdownの使い方.pdf)
 - [R05_Data読み込み方法.pdf](R_practice/R05_Data読み込み方法.pdf)  | [trade2013.csv](R_practice//trade2013.csv)
 
----
+#### 重力方程式
 
 第2回以降以下のトピックを１つずつ進めて行ければ理想的ですが、実際には状況を見ながら、できる範囲で進めていきます。
 
