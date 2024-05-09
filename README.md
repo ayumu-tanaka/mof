@@ -28,9 +28,9 @@
 第2回開始までに、以下の資料でR/Posit Cloudの基本的な使い方を習得して下さい。
 - [R01_Posit_Cloudアカウント作成方法.pdf](R_practice/R01_Posit_Cloudアカウント作成方法.pdf)
 - [R02_Posit_CloudのProjectの共有方法.pdf](R_practice/R02_Posit_CloudのProjectの共有方法.pdf)
-- [R03_Posit_Cloudプロジェクト作成とダウンロード方法.pdf](R_practice/R03_Posit_Cloudプロジェクト作成とダウンロード方法.pdf)
-- [R04_Rマークダウンの使い方.pdf](R_practice/R04_Rマークダウンの使い方.pdf)
-- [R05_データ読み込み方法.pdf](R_practice/R05_データ読み込み方法.pdf)
+- [R03_Posit_Cloud_Project作成とDownload方法.pdf](R_practice/R03_Posit_Cloud_Project作成とDownload方法.pdf)
+- [R04_R_Markdownの使い方.pdf](R_practice/R04_R_Markdownの使い方.pdf)
+- [R05_Data読み込み方法.pdf](R_practice/R05_Data読み込み方法.pdf)
 
 ---
 
