@@ -1,0 +1,235 @@
+---
+title: "伝統的な重力方程式の推定"
+author: "田中 鮎夢"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: yes
+bibliography: ref.bib
+link-citations: yes
+---
+
+```{r setup-chunk, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, #コードを表示
+                      cache = FALSE, #キャッシュを残さない
+                      message=FALSE, warning=FALSE)
+
+```
+
+
+# 貿易データ
+本ページでは、重力方程式の基本的な推定方法を説明する。日本語の文献としては、重力方程式について、伊藤・田中『現実からまなぶ国際経済学』 や [田中「国際貿易と重力の意外な関係: 重力方程式の基本」](https://researchmap.jp/ayumu-tanaka/misc/14570985) に説明がある。
+
+[gravity.xlsx データ](https://ayumu-tanaka.github.io/teaching/gravity.xlsx)には、2005 年の 1年間の世界の2国間の貿易額が収録されている。
+
+Rでデータを読み込む。
+
+```{r}
+library(readxl)
+gravity <- read_excel("gravity.xlsx")
+head(gravity)
+```
+
+オンラインから直接データを読み込みたい場合は、パッケージ`gdata`をインストールした上で、以下のコードを用いる。
+```
+# install.packages("gdata")
+library(gdata)
+library(readxl)
+
+download.file("https://ayumu-tanaka.github.io/teaching/gravity.xlsx","gravity.xlsx",mode="wb")
+gravity <- read_excel("gravity.xlsx")
+```
+
+変数 importer は輸入国の ISO コードと呼ばれる 3桁の国コードである。同様に、exporter は輸出国 の ISO コードである。例えば、日本の ISO コードは JPN、アメリカの ISO コードは USA である。また、ISOコード（exporter, importer）の他に、輸入額（imports）、輸出国のGDP（gdp_exporter）、輸入国のGDP（gdp_importer）、輸出国と輸入国の間の距離（dist）が含まれている。
+
+# 対数変換
+
+R で次のような重力方程式を推定することを考える。
+
+$$
+輸入額 = 定数 \times \frac{輸出国のGDP^{\alpha} \times 輸出国のGDP^{\beta}}{輸出国と輸入国の間の距離^{\gamma}} \times e ^{\delta \times 言語の共通性}
+$$ この式は非線形のためコンピューターの能力上、推定が難しい。そのため、従来は両辺の対数をとって、線形にされてきた。線形にされた式の推定は最小二乗法で比較的簡単に推定できる。そこでまず、回帰分析に用いる変数の対数を取る。Rのコードは次の通りである。
+
+```{r}
+gravity$limports <- log(gravity$imports)
+gravity$lgdp_exporter <- log(gravity$gdp_exporter)
+gravity$lgdp_importer <- log(gravity$gdp_importer)
+gravity$ldist <- log(gravity$dist)
+```
+
+ここで、0より大きい値しか対数値にできないことに注意が必要である。 そのため、輸入額が0より大きい値のサンプルを作成しておく。
+
+```{r}
+gravity2 <- subset(gravity,gravity$imports>0)
+```
+
+# 推定
+
+通常、貿易データは不均一分散の性質を持つので、デフォルトの`lm`で推定するのではなく、`lm_robust`で推定する。そのために、@blair2018package が開発した パッケージ`estimatr`をインストールする。
+
+```{r eval=FALSE, include=TRUE}
+install.packages("estimatr")
+```
+
+パッケージ`estimatr`の使い方は、[公式ページ](https://search.r-project.org/CRAN/refmans/estimatr/html/lm_robust.html)で確認できる。
+
+不均一分散頑健な標準誤差を計算するよう、`lm_robust`で重力方程式を推定するコードは以下の通りである。`summary(ols)`により回帰分析の結果が出力される。
+
+```{r}
+library(estimatr)
+ols <- lm_robust(limports ~ 
+                lgdp_exporter + lgdp_importer + ldist + comlang_off, 
+                 data = gravity2)
+
+summary(ols)
+```
+
+なお、回帰分析は、以下のコードでも実行できる。
+
+```
+# ols<-lm_robust(gravity2$limports ~ gravity2$lgdp_exporter + gravity2$lgdp_importer + gravity2$ldist + gravity2$comlang_off)
+```
+
+# 推定結果の解釈
+
+## 連続変数 
+推定結果において、たとえば、輸出国のGDP (lgdp_exporter) の推定係数は$\hat{\alpha}=1.226$になっている。これは、以下のような関係にあると言える。 
+$$
+\frac{\partial \hat{輸入額}}{\partial 輸出国のGDP}  =   \hat{\alpha}=1.226
+$$ 
+また、対数微分の公式
+$$
+\frac{\mathrm{dln}x}{\mathrm{d}x}=\frac{1}{x}
+$$
+から、$\mathrm{dln}x=\frac{\mathrm{d}x}{x}$となるので、$\mathrm{dln}x$は変化率を表している。この関係を使って上の式を書き直すと、近似的に以下が成り立つ。
+
+$$
+\frac{輸入額の変化率}{輸出国のGDPの変化率}  =   \hat{\alpha}=1.226
+$$
+
+この式は、弾性値（=Yの変化率/Xの変化率）の形になっている。そのため、輸出国のGDPが1\%大きくなれば、平均的に輸入額が1.226\%大きくなる傾向にあると表現できる。
+
+## ダミー変数 
+また、言語の共通性 (comlang_off) の推定係数は$\hat{\delta}=1.293$である。もともと、言語の共通性以外の他の項を$B$としてまとめると、重力方程式の定式化から以下のような関係にある。
+
+$$
+輸入額 = B \times e ^{\delta \times 言語の共通性}
+$$
+そのため、言語が共通の場合は、
+$$
+\hat{輸入額} = B \times e ^{1.293 \times 1} = B \times e ^{1.293}
+$$
+そのため、言語が共通ではない場合は、
+$$
+\hat{輸入額} = B \times e ^{1.293 \times 0} = B \times e ^{0} = B
+$$
+となる。言語が共通な場合は、
+$$
+\frac{B \times e ^{1.293}}{B}=e ^{1.293}　\fallingdotseq　3.64
+$$
+より、平均的に`r round(exp(1.293),2)`倍貿易額が大きい傾向にあることが分かる。
+
+なお、以下のように計算している。
+```{r}
+b <- exp(1.293)
+b
+```
+
+
+
+# 推定結果の整形と表示1 with `modelsummary`
+
+[Regression Tables with estimatr](https://declaredesign.org/r/estimatr/articles/regression-tables.html)で説明されているように、`stargazer`ではなく、`Texreg`や`modelsummary`を用いた方が簡単に、`lm_robust`を用いた不均一分散頑健な推定結果を表示できる。
+
+ここでは、@arel2022modelsummary が開発した`modelsummary`を用いて、推定結果を表示する。
+
+```{r}
+#install.packages("modelsummary")
+library(modelsummary)
+#(1) lmを使用して通常の回帰分析を実行し、ols1に保存。
+ols1 <- lm(limports ~ lgdp_exporter 
+           + lgdp_importer + ldist + comlang_off, 
+           data = gravity2)
+
+#(2) lm_robustを使用して回帰分析を実行し、不均一分散頑健な標準誤差を計算し、ols2に保存。
+ols2 <- lm_robust(limports ~ lgdp_exporter 
+                  + lgdp_importer + ldist + comlang_off, 
+                  data = gravity2)
+
+modelsummary(list(ols1, ols2), stars = TRUE)
+
+```
+
+より手の込んだ推定結果表も作成できる。 参考：[modelsummary: regression tables](https://vincentarelbundock.github.io/modelsummary/articles/modelsummary.html)
+
+```{r}
+modelsummary(
+  list(ols1, ols2),
+  estimate  = c("estimate",
+                "{estimate}{stars}"),
+  coef_omit = "Intercept",
+  gof_omit = 'DF|Deviance|AIC|BIC|RMSE',
+  notes = list('* p<0.1; ** p<0.05; *** p<0.01')
+  )
+```
+
+# 推定結果のLaTex形式出力
+
+
+```{r message=FALSE, warning=FALSE}
+modelsummary(list(ols1, ols2), output = "table.tex")
+```
+LaTexのpreambleに以下のコード記載することが必要。
+
+```
+\usepackage{booktabs}
+\usepackage{siunitx}
+\newcolumntype{d}{S[
+    input-open-uncertainty=,
+    input-close-uncertainty=,
+    parse-numbers = false,
+    table-align-text-pre=false,
+    table-align-text-post=false
+ ]}
+```
+
+
+# 係数プロット with `modelplot`
+
+```{r}
+library(ggplot2)
+modelplot(list(ols1, ols2), coef_omit = "Intercept")
+ggsave("coefplot.png")
+```
+
+
+# 推定結果の整形と表示2 with `stargazer`
+
+なお、`stargazer`を用いた表の作成は、`stargazer`が`lm_robust`に対応していないためそのままではできない。
+
+```{r eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+library(stargazer)
+stargazer(ols, type="text")
+```
+
+[ここ](https://declaredesign.org/r/estimatr/articles/regression-tables.html)で説明されているような工夫を施すことで、`stargazer`を用いた表の作成ができるようになる。
+
+まず、`lm`を使用して通常の回帰分析を実行する。そのあとで、`starprep`関数を用いて、標準誤差を不均一分散頑健な標準誤差に変換する。
+
+```{r echo=TRUE}
+library(stargazer)
+#(1) lmを使用して通常の回帰分析を実行し、ols1に保存。
+ols1 <- lm(limports ~ lgdp_exporter 
+           + lgdp_importer + ldist + comlang_off, 
+           data = gravity2)
+#(2)starprep関数を用いて、ols2の標準誤差を不均一分散頑健な標準誤差に変換して、ols2の推定結果を表示する。
+stargazer(ols1, type="text",se = starprep(ols2))
+#(3)通常のOLSの標準誤差は以下で表示できる。
+stargazer(ols1, type="text")
+```
+
+# 参考文献
+
+

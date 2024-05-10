@@ -1,0 +1,199 @@
+---
+title: "現代的な重力方程式の推定 with `fixest`"
+author: "田中 鮎夢"
+date: "2024-03-14"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: yes
+bibliography: ref.bib
+link-citations: yes
+---
+
+```{r setup-chunk, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, #コードを表示
+                      cache = FALSE, #キャッシュを残さない
+                      message=FALSE, warning=FALSE)
+
+```
+
+
+# はじめに
+現代的な重力方程式の推定では、@anderson2003gravity が指摘した多角的貿易抵抗指数（物価効果）を制御するために、輸出国のGDPの代わりに輸出国固定効果、輸入国のGDPの代わりに輸入国固定効果が用いられる。また、マクロショックを制御するために、年固定効果を加えることも多い。さらには、パネルデータでは、輸出国（輸入国）固定効果と年次固定効果の交差項を含めることで、時変の輸出国（輸入国）属性を制御する。このように、現代的な重力方程式の推定には、大量の固定効果が必要になる。現代的な重力方程式の推定はBase Rでは計算上困難であるが、@berge2021fast によって開発された`fixest`パッケージを用いることで、計算時間を短縮化し、実行可能となる。
+
+本ページは、@berge2021fast に準拠して、`fixest`を用いた重力方程式の推定を概説する。なお、本ページでは、貿易国ペア固定効果は便宜上推定に含めていないが、本来は貿易国ペア固定効果も含めた方が良い。本ページで貿易国ペア固定効果は推定に含めていないのは、貿易国ペア固定効果を含めると、時間不変変数である距離の係数が推定できなくなるためである。
+
+`fixest`パッケージは、多くの固定効果を含む推定を行うための関数群を提供している。主な2つの関数は、線形モデル用の`feols`と一般化線形モデル用の`feglm`である。また、関数 `fepois`は、ポアソン最尤推定用のエイリアスである。つまり、関数`fepois`は、実際には`family = poisson`というオプションをつけた関数`feglm`のエイリアスである。また、推定値の標準誤差を簡単かつ直感的にクラスタ化することができる（最大4方向）。さらに関数`etable`により、複数の推定結果をdata.frameまたはLaTexテーブルにシームレスにエクスポートできる。
+
+パッケージのインストールのインストールは以下のコードで行われる。
+
+```
+install.packages("fixest")
+```
+
+パッケージの読み込みを行う。
+
+```{r}
+# パッケージの読み込み
+library(fixest)
+```
+
+
+
+# 貿易データ
+
+フランスの研究機関CEPIIは、重力方程式に必要な距離などの変数を[GeoDist](http://www.cepii.fr/CEPII/en/bdd_modele/bdd_modele_item.asp?id=6)というデータベースにまとめていた。最近では、GeoDistをさらに拡張した[Gravity](http://www.cepii.fr/CEPII/en/bdd_modele/bdd_modele_item.asp?id=8)という無料のデータベースを公開している。
+
+Gravityデータベースは、２国間の貿易額・距離・RTAの有無・言語の共通性、輸出国と輸入国のGDP・一人当たりGDP・人口・ビジネスコスト・GATT・WTO加入有無といった幅広い変数を含んでいる。1948--2019年をカバーしている。ただし、貿易データ（tradeflow_baci）は1996年以降のみである。データベース全体では1GBを超えるため、ここでは必要最低限の変数・年次に絞ったデータを用いている。
+
+[gravity_basic2017.xlsx](https://ayumu-tanaka.github.io/teaching/gravity_basic2017.xlsx)には、2017-2018年の2年間の世界の2国間の貿易額が収録されている。
+
+ - 	year:	Year
+ - 	iso3_o:	Origin ISO3 alphabetic
+ - 	iso3_d:	Destination ISO3 alphabetic
+ - 	dist:	Distance between most populated cities,
+ - 	comlang_off:	1 = Common official or primary language
+ - 	gdp_o:	Origin GDP (current thousands US$)
+ - 	gdp_d:	Destination GDP (current thousands US$)
+ - 	rta:	1 = RTA (source: WTO)
+ - 	tradeflow_baci:	Trade flow, 1000 USD (source: BACI)
+
+```{r}
+library(readxl)
+gravity <- read_excel("gravity_basic2017.xlsx")
+head(gravity)
+```
+
+# 重力方程式の定式化
+
+我々は、貿易に対する地理的距離の負の効果を見つけることに関心があり、非常に単純な重力モデルを推定することにする。従属変数は二国間の貿易水準であり、独立変数は二国間の地理的距離である。3つの固定効果の効果を除いた地理的距離の弾力性を求めるために、以下のように推定する：
+
+$$
+E\left(\text { Trade }_{i, j, t}\right)=\gamma_{i}^{\text {Exporter }} \times \gamma_{j}^{\text {Importer }}  \times \gamma_{t}^{\text {Year }} \times \text { Distance }_{i j}^{\beta}
+$$
+ここで、添え字$i$、$j$、$t$はそれぞれ輸出国、輸入国、年を表し、$\gamma$はこれらのグループの固定効果である。ここで$\beta$は注目される弾力性である。
+
+@silva2006log がジェンセンの不等式に基づき、対数線形化した重力方程式の最小二乗法推定を批判して、ポワソン擬似最尤（PPML）推定を推奨して以来、PPMLを用いて重力方程式を推定することが多くなっている。
+ポアソンを使用する場合、右辺はポアソン・パラメータの負の値を避けるために指数化されるため、この関係は実際には線形であることに注意する必要がある。これは等価な関係を導く:
+$$
+E\left(\text { Trade }_{i, j, t}\right)=\exp \left(\gamma_{i}^{\text {Exporter }}+\gamma_{j}^{\text {Importer }}+\gamma_{t}^{\text {Year }}+\beta \times \ln \text { Distance }_{i j}\right)
+$$
+
+
+# 最小二乗法（OLS）推定
+まずは、OLSで推定する。線形で推定するために、変数を対数にする必要がある：
+
+```{r}
+gravity_ols = feols(log(tradeflow_baci) ~ log(dist) | iso3_o + iso3_d  + year, vcov = "twoway", data = gravity)
+```
+
+
+結果は`print`もしくは`summary`で直接表示できる：
+
+```{r}
+print(gravity_ols)
+```
+
+固定効果を以下のコードで抽出し、グラフに表示できる。
+```{r}
+fixedEffects = fixef(gravity_ols)
+plot(fixedEffects)
+```
+
+
+
+## StataによるOLS推定 
+Stataで同じ推定を行うには`reghdfe`をインストールする。
+```
+ssc install reghdfe
+```
+
+データを読み込んだ上で、以下のコードを実行して、対数をとる。
+
+```
+import excel using https://ayumu-tanaka.github.io/teaching/gravity_basic2017.xlsx,clear firstrow
+g lntradeflow_baci=ln(tradeflow_baci)
+g lndist=ln(dist)
+
+```
+
+最小二乗法の実行は、以下の通りである。
+```
+reghdfe lntradeflow_baci lndist,absorb(iso3_o iso3_d year)
+```
+
+
+# ポアソン擬似最尤（PPML）推定
+
+ポアソン尤度を用いたこのモデルの推定は以下の通りである：
+
+```{r}
+gravity_pois = fepois(tradeflow_baci ~ log(dist) | iso3_o + iso3_d  + year,  vcov = "twoway", data = gravity)
+```
+
+結果は`print`もしくは`summary`で直接表示できる：
+
+```{r}
+print(gravity_pois)
+```
+
+`print`は，係数推定値と標準誤差，およびいくつかの他の情報を報告する。適合度の情報のうち、二乗相関は従属変数と予測変数の相関に対応し、OLS推定におけるR2乗の考え方を反映している。
+
+## StataによるPPML推定 
+Stataで同じ推定を行うには次のコードを`ppmlhdfe`をインストールする。
+
+```
+ssc install ppmlhdfe
+```
+
+データを読み込み、以下のコードで、PPML推定を行う。
+
+```
+import excel using https://ayumu-tanaka.github.io/teaching/gravity_basic2017.xlsx,clear firstrow
+ppmlhdfe tradeflow_baci lndist,absorb(iso3_o iso3_d year)
+
+```
+
+ここで用いた`ppmlhdfe`のほかに、Thomas Zylkinによって開発された[`ppml_panel_sg`](http://fmwww.bc.edu/RePEc/bocode/p/ppml_panel_sg.pdf)というパッケージもある。
+
+# 標準誤差のクラスタリング
+上記の例のように、標準誤差は推定時に計算することもでき、`vcov`引数を追加するだけでよい。推定した後に、標準誤差をクラスタリングするには、`summary`の引数vcovを使用する。最初の2つの固定効果（すなわち、iso3_o変数とiso3_d変数）に従って標準誤差をクラスタリングしたいときは、以下のコードを用いる。
+
+```{r}
+summary(gravity_pois, vcov = "twoway")
+```
+
+クラスタリングは、1〜最大4つの変数に対して行うことができる。推定に固定効果が含まれている場合、デフォルトでは、クラスタリングはこれらの固定効果を元の順序で使用して行われる。これが、前の例で2元クラスタリングにiso3_o変数とiso3_d変数が使われた理由である。
+
+# 係数プロットで比較する with `coefplot`
+
+`fixest`の`coefplot`を使えば、係数プロットが簡単に描ける。以下のコードで、OLSとPPMLの推定係数を比較できる：
+
+```{r}
+coefplot(list(gravity_ols, gravity_pois))
+```
+
+# Rで結果を見る
+ここで、いくつかの推定結果をコンパクトに概観するため、関数`etable` を使う。この関数は、複数の固定効果推定の結果を`data.frame`に要約する。推定結果をまとめて見るには、次のようにタイプするだけでよい：
+
+```{r}
+etable(gravity_ols, gravity_pois,
+         vcov = "twoway", headers = c("OLS","PPML"))
+```
+
+
+# 結果をLaTexにエクスポートする
+
+これまで、複数の推定結果をRコンソールで報告する方法を見てきた。ここで、同じ関数 `etable` を使用して、結果を LaTex 形式の表にエクスポートすることができる。
+
+```{r}
+etable(gravity_ols, gravity_pois, cluster = ~iso3_o + iso3_d, file = "Tables1.tex", replace = TRUE)
+```
+
+この例では、2つの推定結果を含む1つの表がLaTexの表に直接エクスポートされ、"Tables1.tex "というファイルに格納されている。引数ファイルが存在する場合、LaTexフォーマットがデフォルトになるため、引数`tex=TRUE`を使用する必要がない。このファイルは、`replace=TRUE`という引数のおかげで、毎回再作成される。
+
+
+
+# 参考文献
+

@@ -1,0 +1,117 @@
+---
+title: "ggplot2で貿易フローの地図を作成"
+author: "Ayumu Tanaka"
+date: "2024-04-08"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: yes
+#bibliography: ref.bib
+link-citations: yes
+---
+
+
+```{r setup-chunk, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, #コードを表示
+                      cache = FALSE, #キャッシュを残さない
+                      message=FALSE, warning=FALSE)
+
+```
+
+
+# 緯度経度付き貿易データ
+
+- [trade.csv](https://ayumu-tanaka.github.io/teaching/trade.csv)
+- origins: USA, Australia, China, New Zealand, Germanyの5カ国
+- destinations: Japanのみ
+- import: 上記5カ国から日本への輸出額
+- longitude.x	latitude.x: 輸出国の緯度経度
+- longitude.y	latitude.y: 輸入国（日本）の緯度経度。(137.96,	37.54)。
+
+```{r message=FALSE, warning=FALSE}
+library(readr)
+trade <- read_csv("trade.csv")
+head(trade)
+```
+
+オンラインでデータ読み込む場合は、以下のコード。
+```
+trade <- read_csv("https://ayumu-tanaka.github.io/teaching/trade.csv")
+```
+
+
+```{r}
+# 世界地図
+library(rworldmap)
+worldMap <- getMap()
+  
+plot(worldMap)
+
+```
+  
+
+# 地理ファイルをデータに変換する
+
+- ここで使う`ggplot2`の`fortify()`関数は、空間オブジェクトを、ggplot2で描画できるようにデータに変換する関数である。以下のページに簡単な解説がある。
+- [Fortify method for map objects](https://ggplot2.tidyverse.org/reference/fortify.map.html)
+- `fortify()`関数は、変数として、緯度経度（`long`, `lat`）のほかに、`group`として国名を生成する。
+
+```{r}
+
+# ggplot2で地図を描画したり、データ処理を行うため。
+library(tidyverse)
+#library(data.table)
+#library(sf)
+
+mapworld_df <- fortify( worldMap ) 
+
+head(mapworld_df)
+```
+
+
+# 地図の描画
+
+- `scale_colour_distiller`で使える色：Blues, BuGn, BuPu, GnBu, Greens, Greys, Oranges, OrRd, PuBu, PuBuGn, PuRd, Purples, RdPu, Reds, YlGn, YlGnBu, YlOrBr, YlOrRd
+
+- `direction = 1`で色が濃いいほど、貿易額が増えるように設定。
+
+- 貿易フローの形を直線にしたい場合は、`geom_curve()`の代わりに`geom_segment()`を使う。
+
+- 南極などを除くために、`coord_sf(xlim = c(-150, 150), ylim = c(80, -60), expand = TRUE) `と設定。
+
+- `color = import` で、貿易額でフローの曲線の色を変えている。
+
+- `linewidth = import/10`で、貿易額でフローの曲線の幅を変えている。
+
+- `geom_curve`で`show.legend = FALSE`とすると、凡例を非表示にする。
+
+```{r}
+
+# 地図作成
+  ggplot() + 
+    geom_polygon(data = mapworld_df, 
+               aes(long, lat, group = group), 
+                 fill = "white", colour = "grey50") +
+    geom_curve(data = trade, 
+               aes(x = longitude.x, y = latitude.x, 
+                   xend = longitude.y, yend = latitude.y, 
+                   color = import, linewidth = import/10),
+                   #show.legend = FALSE,
+                 arrow = arrow(length = unit(0.01, "npc"))) +
+    scale_colour_distiller(palette = "Blues", direction = 1, 
+               name="輸入額", guide = "colorbar") +
+    scale_linewidth(name = "輸入額", guide = "legend") +
+    coord_sf(xlim = c(-150, 150), ylim = c(80, -60), expand = TRUE) 
+
+
+# 保存
+ggsave("trade_flow_ggplot2.png", width = 8, height = 4, dpi = "print")
+
+```
+
+# 参考にしたサイト
+
+- [Flow map in R using ggplot2](https://github.com/rafapereirabr/flow-map-in-r-ggplot/blob/master/README.md)
+
+

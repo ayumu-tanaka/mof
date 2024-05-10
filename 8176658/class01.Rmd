@@ -1,0 +1,27 @@
+---
+title: "class01"
+author: "Ayumu Tanaka"
+date: "`r Sys.Date()`"
+output:
+  word_document: default
+  html_document: default
+---
+
+
+
+# 四則演算
+
+```{r}
+3+3
+3-3
+3*3
+3/3
+```
+# データ読み込み
+
+```{r}
+library(readr)
+trade2013 <- read_csv("trade2013.csv")
+head(trade2013)
+```
+

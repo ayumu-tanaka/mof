@@ -1,0 +1,189 @@
+---
+title: "現代的な重力方程式のパネル推定 with `fixest`"
+author: "田中 鮎夢"
+date: "2024-03-14"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: yes
+bibliography: ref.bib
+link-citations: yes
+---
+
+```{r setup-chunk, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, #コードを表示
+                      cache = FALSE, #キャッシュを残さない
+                      message=FALSE, warning=FALSE)
+
+```
+
+# はじめに
+@anderson2003gravity が指摘した多角的貿易抵抗指数（物価効果）を制御するために、1時点のクロスセクションの貿易データであれば、輸出国のGDPの代わりに輸出国固定効果、輸入国のGDPの代わりに輸入国固定効果を説明変数に加えれば良い。２時点以上のパネルの貿易データであれば、毎年GDPや物価は変化するので、GDPの代わりに輸出国（輸入国）固定効果と年次固定効果の交差項を説明変数に加えることで、時変の輸出国（輸入国）属性を制御する。このように、GDPの代わりに、輸出国（輸入国）固定効果を用いるアプローチを**「固定効果アプローチ」**と呼んでいる。
+
+さらに、重力方程式に、貿易ペアの固定効果を含めることがある。例えば、イギリスとアメリカという貿易国ペア、日本とアメリカという貿易国ペアごとにダミー変数を作成して、重力方程式の説明変数に加えるということである。これにより、貿易ペア固有の時間不変の要因を制御できる。貿易ペアの固定効果を推定に加えることは、計量経済学のテキストで**「固定効果法」**と呼ばれているパネルデータ推定法と同じである。ここでいう**「固定効果法」**は、先に述べた多角的貿易抵抗指数を制御するための**「固定効果アプローチ」**とは意味が違うことに注意が必要である。
+
+このように、時変の輸出国（輸入国）固定効果、貿易ペアの固定効果、さらには年次固定効果を加えて、重力方程式をポワソン擬似最尤（PPML）で推定するのが、現代の重力方程式の標準的な推定方法である。多数の固定効果(ダミー変数)を含むため、Base Rでは計算上困難であるため、本ページでは、@berge2021fast によって開発された`fixest`パッケージを用いる。
+
+
+パッケージのインストールのインストールは以下のコードで行われる。
+
+```
+install.packages("fixest")
+```
+
+パッケージの読み込みを行う。
+
+```{r}
+# パッケージの読み込み
+library(fixest)
+```
+
+
+
+# 貿易データ
+
+[gravity_rta.csv](https://ayumu-tanaka.github.io/teaching/gravity_rta.csv)には、フランスの研究機関CEPIIが作成している、[Gravity](http://www.cepii.fr/CEPII/en/bdd_modele/bdd_modele_item.asp?id=8)という無料のデータベースから、２国間の貿易額やRTAの有無など必要最小限のデータを抜き出している。[gravity_rta.csv](https://ayumu-tanaka.github.io/teaching/gravity_rta.csv)には、2010--2018年の9年間の世界の2国間の貿易額が収録されている。Gravityデータベースは定期的に更新されている。本ページで用いるデータは、「Gravity_dta_V202211」版であり、2024年3月に入手した。
+
+ - 	year:	Year
+ - 	rta:	1 = RTA (source: WTO)
+ - 	tradeflow_baci:	Trade flow, 1000 USD (source: BACI)
+ - 	pair	group(iso3_o iso3_d)
+ - 	origin	Origin ISO3 alphabetic
+ - 	destination	Destination ISO3 alphabetic
+
+Rは大規模なデータの読み込みには非常に時間がかかる。事実上読み込めないことがある。今回使うデータは、`readxl`パッケージの`read_excel`ではexcel形式で読み込めない。そのため、@dowle2019package が開発した大規模なデータの読み込みに対応している`data.table`パッケージをまずインストールする。
+
+```
+install.packages("data.table")
+
+```
+
+そして、`data.table`パッケージの`fread`関数でcsvファイルを読み込む。
+
+```{r}
+library(data.table)
+gravity_rta <- fread("gravity_rta.csv")
+head(gravity_rta)
+```
+
+# 重力方程式の定式化
+
+我々は、貿易に対するRTA（regional trade agreement）の効果を検証するために、重力モデルを推定することにする。従属変数は二国間の貿易水準であり、独立変数は二国間のRTAダミーである。以下のように定式化する：
+
+$$
+E\left(\text { Trade }_{i, j, t}\right)=\gamma_{i,t}^{\text {Exporter }} \times \gamma_{j,t}^{\text {Importer }}  \times \gamma_{t}^{\text {Year }} \times \text { RTA }_{i j, t}^{\beta}
+$$
+ここで、添え字$i$、$j$、$t$はそれぞれ輸出国、輸入国、年を表し、$\gamma$はこれらのグループの固定効果である。ここで$\beta$は注目される処置効果である。
+
+@silva2006log に従い、ポワソン擬似最尤（PPML）推定を用いて重力方程式を推定することを考える。これは次の関係を導く:
+$$
+E\left(\text { Trade }_{i, j, t}\right)=\exp \left(\gamma_{i,t}^{\text {Exporter }}+\gamma_{j,t}^{\text {Importer }}+\gamma_{t}^{\text {Year }}+\beta \times  \text { RTA }_{i j, t}\right)
+$$
+
+
+# 最小二乗法（OLS）推定
+まずは、OLSで推定する。線形で推定するために、変数を対数にする必要がある：
+
+```{r}
+gravity_ols = feols(log(tradeflow_baci) ~ rta | iso3_o^year + iso3_d^year + pair, vcov = ~ iso3_o + iso3_d, data = gravity_rta)
+```
+
+
+結果は`print`もしくは`summary`で直接表示できる：
+
+```{r}
+print(gravity_ols)
+```
+
+## StataによるOLS推定 
+Stataで同じ推定を行うには`reghdfe`をインストールする。
+```
+ssc install reghdfe
+```
+
+データを読み込んだ上で、以下のコードを実行して、対数をとる。
+
+```
+import delimited using https://ayumu-tanaka.github.io/teaching/gravity_rta.csv,clear 
+g lntradeflow_baci=ln(tradeflow_baci)
+```
+
+さらに、文字変数を`absorb`で指定することができないので、輸出国（輸入国）ISOコードを数値変数に変換しておく。
+
+```
+encode iso3_o,gen(origin)
+encode iso3_d,gen(destination)
+```
+
+最小二乗法の実行は、以下の通りである。
+
+```
+reghdfe lntradeflow_baci rta, absorb(i.origin##i.year i.destination##i.year i.pair) vce(cluster origin destination)
+```
+
+Stataでは、`A##B`は、Aの固定効果、Bの固定効果、AとBの交差項の固定効果全てを使うことを意味する。
+
+
+# ポアソン擬似最尤（PPML）推定
+
+ポアソン尤度を用いたモデルの推定は以下の通りである：
+
+```{r}
+gravity_pois = fepois(tradeflow_baci ~ rta | iso3_o^year + iso3_d^year + pair,  vcov = ~ iso3_o + iso3_d, data = gravity_rta)
+```
+
+結果は`print`もしくは`summary`で直接表示できる：
+
+```{r}
+print(gravity_pois)
+```
+
+`print`は，係数推定値と標準誤差，およびいくつかの他の情報を報告する。適合度の情報のうち、二乗相関は従属変数と予測変数の相関に対応し、OLS推定におけるR2乗の考え方を反映している。
+
+## StataによるPPML推定 
+Stataで同じ推定を行うには次のコードを`ppmlhdfe`をインストールする。
+
+```
+ssc install ppmlhdfe
+```
+
+データを読み込み、以下のコードで、PPML推定を行う。
+
+```
+import delimited using https://ayumu-tanaka.github.io/teaching/gravity_rta.csv,clear 
+
+encode iso3_o,gen(origin)
+encode iso3_d,gen(destination)
+
+ppmlhdfe tradeflow_baci rta,absorb(i.origin##i.year i.destination##i.year i.year i.pair) vce(cluster origin destination)
+
+```
+
+
+
+
+# Rで結果を見る
+ここで、いくつかの推定結果をコンパクトに概観するため、関数`etable` を使う。この関数は、複数の固定効果推定の結果を`data.frame`に要約する。推定結果をまとめて見るには、次のようにタイプするだけでよい：
+
+```{r}
+etable(gravity_ols, gravity_pois,
+         vcov = ~ iso3_o + iso3_d, 
+       headers = c("OLS","PPML"))
+```
+
+
+# 結果をLaTexにエクスポートする
+
+これまで、複数の推定結果をRコンソールで報告する方法を見てきた。ここで、同じ関数 `etable` を使用して、結果を LaTex 形式の表にエクスポートすることができる。
+
+```{r}
+etable(gravity_ols, gravity_pois, cluster = ~iso3_o + iso3_d, file = "Tables2.tex", replace = TRUE)
+```
+
+この例では、2つの推定結果を含む1つの表がLaTexの表に直接エクスポートされ、"Tables2.tex "というファイルに格納されている。引数ファイルが存在する場合、LaTexフォーマットがデフォルトになるため、引数`tex=TRUE`を使用する必要がない。このファイルは、`replace=TRUE`という引数のおかげで、毎回再作成される。
+
+
+
+# 参考文献
+

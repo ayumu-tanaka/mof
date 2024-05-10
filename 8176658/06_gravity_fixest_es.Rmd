@@ -1,0 +1,159 @@
+---
+title: "重力方程式を用いた多期間差の差推定"
+author: "田中 鮎夢"
+date: "2024-03-14"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: yes
+bibliography: ref.bib
+link-citations: yes
+---
+
+```{r setup-chunk, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, #コードを表示
+                      cache = FALSE, #キャッシュを残さない
+                      message=FALSE, warning=FALSE)
+
+```
+
+# はじめに
+
+本ページでは、政策が２国間の貿易額に与える影響が経時的にどう変化するか分析するため、単純な差の差 (DiD: difference-in-differences) 分析を拡張したevent study分析を実施する。 @anderson2003gravity が指摘した多角的貿易抵抗指数（物価効果）を制御するために、時変の輸出国（輸入国）固定効果、貿易ペアの固定効果、さらには年次固定効果を加えて、重力方程式をポワソン擬似最尤（PPML）で推定する。
+
+本ページでは、1958年1月1日に、ローマ条約が発効し、欧州経済共同体（EEC、のちの欧州共同体 (EC)）発足した事例を用いて、EEC発足が２国間貿易に与えた影響を推定する。EEC発足は、1958年という単一時点のため、本ページで扱う処置は時差のない処置である。時差のある処置の場合は、処置効果の推定はより難しくなるが、本ページで扱う時差のない処置は、そうした困難はない。
+
+推定には、本ページでは、@berge2021fast によって開発された`fixest`パッケージを用いる。 パッケージのインストールのインストールは以下のコードで行われる。
+
+```         
+install.packages("fixest")
+```
+
+パッケージの読み込みを行う。
+
+```{r}
+# パッケージの読み込み
+library(fixest)
+```
+
+# 貿易データ
+
+[gravityIMFeu.dta](https://ayumu-tanaka.github.io/teaching/gravityIMFeu.dta)には、フランスの研究機関CEPIIが作成している、[Gravity](http://www.cepii.fr/CEPII/en/bdd_modele/bdd_modele_item.asp?id=8)という無料のデータベースから、２国間の貿易額やRTAの有無など必要最小限のデータを抜き出している。[gravityIMFeu.dta](https://ayumu-tanaka.github.io/teaching/gravityIMFeu.dta)には、1948--1972年の25年間の世界の2国間の貿易額 (tradeflow_imf_d, tradeflow_imf_o) が収録されている。今回は古い期間の貿易データを用いるため、1996年からしかデータがないCEPIIが作成した貿易データ(tradeflow_baci) ではなく、IMFの貿易データ(tradeflow_imf_d) を用いる。また、一般に、関税計算のために目的地の貿易統計の方が正確であると言われているので、目的地の貿易額 (tradeflow_imf_d) を分析に用いる。
+
+Gravityデータベースは定期的に更新されている。本ページで用いるデータは、「Gravity_dta_V202211」版であり、2024年3月に入手した。主な変数は以下の通りである。
+
+-   year: Year
+-   rta: 1 = RTA (source: WTO)
+-   pair: group(iso3_o iso3_d)
+-   origin: Origin ISO3 alphabetic
+-   destination: Destination ISO3 alphabetic
+-   gdp_o: Origin GDP (current thousands US\$)
+-   gdp_d: Destination GDP (current thousands US\$)
+-   gdpcap_o: Origin GDP per cap (current thousands US\$)
+-   gdpcap_d: Destination GDP per cap (current thousands US\$)
+-   treated_after: 1 = Both Origin and Destination EU members and after 1958
+-   treated: 1 = Both Origin and Destination EU members
+-   after: 1 = after 1958
+-   tradeflow_imf_o: Trade flows as reported by the origin, 1000\
+    current USD (source: IMF)\
+-   tradeflow_imf_d: Trade flows as reported by the destination, 1000 current USD (source: IMF)
+
+RでStata形式のデータ（.dta）を読み込むには、パッケージ`haven`が必要になる。以下でインストールする。
+
+```         
+install.packages("haven")
+```
+
+そして、`haven`パッケージの`read_dta`関数でdtaファイルを読み込む。
+
+```{r}
+library(haven)
+gravityIMFeu <- read_dta("gravityIMFeu.dta")
+head(gravityIMFeu)
+```
+
+# 分析の枠組み
+
+処置群は、輸出国・輸入国の両方が、ドイツ（DEU）、フランス（FRA）、イタリア（ ITA）、オランダ（NLD）である２国間域内貿易である。制御群は、輸出国・輸入国のいずれか、もしくは両方が、ドイツ・フランス・イタリア・オランダではない２国間貿易である。1958年1月1日に、ローマ条約が発効し、欧州経済共同体（EEC、のちの欧州共同体 (EC)）発足した。そのため、1948--1957は、処置前期間（before）、1958--1972は処置後期間（after）である。
+
++-----------------+-----------------+-----------------+-----------------+
+|                 | Before          | After           | 差              |
+|                 |                 |                 |                 |
+|                 | 1948--1957      | 1958--1972      |                 |
++:================+:================+:================+:================+
+| EEC非加盟国     | A0              | A1              | A1-A0           |
++-----------------+-----------------+-----------------+-----------------+
+| EEC加盟国       | B0              | B1              | B1-B0           |
++-----------------+-----------------+-----------------+-----------------+
+| 差              | B0-A0           | B1-A1           | (B1-B0)-(A1-A0) |
++-----------------+-----------------+-----------------+-----------------+
+
+
+# 多期間への拡張
+
+処置群と制御群の貿易額の年平均値をまとめたデータセットを`doBy`パッケージを用いて作成する。使用方法は、[UCLAのページ](https://stats.oarc.ucla.edu/r/faq/how-can-i-collapse-my-data-in-r/)に解説がある。
+
+まず、`doBy`パッケージをインストールする。
+```
+install.packages("doBy")
+
+```
+
+
+```{r}
+library(doBy)
+collapse <- summaryBy(tradeflow_imf_d ~ treated + year, data = gravityIMFeu)
+
+```
+
+
+処置群と制御群の貿易の推移を`plot`関数で折れ線グラフにする。EEC発足の1958年に`abline(v=1958)`により縦線を入れる。なお、縦線(vertical line)は、`abline(v = x)`を使うが、横線(horizontal line)を入れる場合は、`abline(h = y)`を用いる。
+
+```{r}
+
+treated <- subset(collapse,treated==1)
+control <- subset(collapse,treated==0)
+
+plot(treated$year, log(treated$tradeflow_imf_d.mean),type = "o", ylim=c(8,15), col=4, xlab = "period", ylab="Trade values")
+points(control$year,log(control$tradeflow_imf_d.mean),type = "o", col=1)
+abline(v=1958)
+text(1960,13,"treated")
+text(1960,10,"control")
+
+```
+
+# イベント・スタディ・プロット
+
+ポアソン擬似最尤（PPML）推定法を用いた重力方程式の固定効果アプローチ推定を行い、イベント・スタディ・プロット (Event study plot) を描く。ここで、`i(fact_var, num_var, reference)` 構文を用いて、年次変数yearと処置グループを表すダミー変数treatedを指定している。基準となる`reference`にはEEC発足前年の1957年を指定している。
+
+```{r}
+gravity_pois = fepois(tradeflow_imf_d ~  
+                        i(year, treated, 1957) 
+                      | iso3_o^year + iso3_d^year + pair, 
+                      vcov = ~ iso3_o + iso3_d,
+                      data = gravityIMFeu)
+```
+
+結果は`print`もしくは`summary`でも直接表示できるが、`modelsummary`で表示する。
+
+```{r}
+library(modelsummary)
+modelsummary(gravity_pois,
+             stars = TRUE,
+             coef_omit = "Intercept|.*factor",
+             gof_omit = 'DF|Deviance|Log.Lik.|RMSE|AIC|BIC|R2 Within|R2 Within Adj.	')
+```
+
+関数 `iplot` は、`i()` で作成された変数の係数を表示し、その係数のみを表示する。すべての係数を表示したい場合は、代わりに `coefplot` 関数を使用する。`iplot`を用いて、描いたイベント・スタディ・プロットから、EEC加盟により、域内貿易が制御群に比べて、年々増加していることがわかる。一方で、処置前の係数が負（正）に有意である年もあり、パラレル・トレンドは成立していないと考えられる。
+
+```{r}
+iplot(gravity_pois)
+```
+
+# 参考文献
+
+
+
+
+

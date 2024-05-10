@@ -1,0 +1,270 @@
+---
+title: "重力方程式を用いた2元固定効果差の差推定"
+author: "田中 鮎夢"
+date: "2024-03-14"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: yes
+bibliography: ref.bib
+link-citations: yes
+---
+
+```{r setup-chunk, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, #コードを表示
+                      cache = FALSE, #キャッシュを残さない
+                      message=FALSE, warning=FALSE)
+
+```
+
+# はじめに
+
+本ページでは、政策が２国間の貿易額に与える影響を分析するため、2期間２グループの「2 x 2」の差の差 (DiD: difference-in-differences) 分析を実施する。単純なOLSによるDiD分析から始めて、 @anderson2003gravity が指摘した多角的貿易抵抗指数（物価効果）を制御するために、時変の輸出国（輸入国）固定効果、貿易ペアの固定効果、さらには年次固定効果を加えて、重力方程式をポワソン擬似最尤（PPML）で推定していく。
+
+本ページでは、1958年1月1日に、ローマ条約が発効し、欧州経済共同体（EEC、のちの欧州共同体 (EC)）発足した事例を用いて、EEC発足が２国間貿易に与えた影響を推定する。EEC発足は、1958年という単一時点のため、本ページで扱う処置は時差のない処置である。時差のある処置の場合は、処置効果の推定はより難しくなるが、本ページで扱う時差のない処置は、そうした困難はない（@goodman2021difference, @roth2023s）。
+
+推定には、本ページでは、@berge2021fast によって開発された`fixest`パッケージを用いる。 パッケージのインストールのインストールは以下のコードで行われる。
+
+```         
+install.packages("fixest")
+```
+
+パッケージの読み込みを行う。
+
+```{r}
+# パッケージの読み込み
+library(fixest)
+```
+
+# 貿易データ
+
+[gravityIMFeu.dta](https://ayumu-tanaka.github.io/teaching/gravityIMFeu.dta)には、フランスの研究機関CEPIIが作成している、[Gravity](http://www.cepii.fr/CEPII/en/bdd_modele/bdd_modele_item.asp?id=8)という無料のデータベースから、２国間の貿易額やRTAの有無など必要最小限のデータを抜き出している。[gravityIMFeu.dta](https://ayumu-tanaka.github.io/teaching/gravityIMFeu.dta)には、1948--1972年の25年間の世界の2国間の貿易額 (tradeflow_imf_d, tradeflow_imf_o) が収録されている。今回は古い期間の貿易データを用いるため、1996年からしかデータがないCEPIIが作成した貿易データ(tradeflow_baci) ではなく、IMFの貿易データ(tradeflow_imf_d) を用いる。また、一般に、関税計算のために目的地の貿易統計の方が正確であると言われているので、目的地の貿易額 (tradeflow_imf_d) を分析に用いる。
+
+Gravityデータベースは定期的に更新されている。本ページで用いるデータは、「Gravity_dta_V202211」版であり、2024年3月に入手した。主な変数は以下の通りである。
+
+-   year: Year
+-   rta: 1 = RTA (source: WTO)
+-   pair: group(iso3_o iso3_d)
+-   origin: Origin ISO3 alphabetic
+-   destination: Destination ISO3 alphabetic
+-   gdp_o: Origin GDP (current thousands US\$)
+-   gdp_d: Destination GDP (current thousands US\$)
+-   gdpcap_o: Origin GDP per cap (current thousands US\$)
+-   gdpcap_d: Destination GDP per cap (current thousands US\$)
+-   treated_after: 1 = Both Origin and Destination EU members and after 1958
+-   treated: 1 = Both Origin and Destination EU members
+-   after: 1 = after 1958
+-   tradeflow_imf_o: Trade flows as reported by the origin, 1000\
+    current USD (source: IMF)\
+-   tradeflow_imf_d: Trade flows as reported by the destination, 1000 current USD (source: IMF)
+
+RでStata形式のデータ（.dta）を読み込むには、パッケージ`haven`が必要になる。以下でインストールする。
+
+```         
+install.packages("haven")
+```
+
+そして、`haven`パッケージの`read_dta`関数でdtaファイルを読み込む。
+
+```{r}
+library(haven)
+gravityIMFeu <- read_dta("gravityIMFeu.dta")
+head(gravityIMFeu)
+```
+
+# 分析の枠組み
+
+処置群は、輸出国・輸入国の両方が、ドイツ（DEU）、フランス（FRA）、イタリア（ ITA）、オランダ（NLD）である２国間域内貿易である。制御群は、輸出国・輸入国のいずれか、もしくは両方が、ドイツ・フランス・イタリア・オランダではない２国間貿易である。1958年1月1日に、ローマ条約が発効し、欧州経済共同体（EEC、のちの欧州共同体 (EC)）発足した。そのため、1948--1957は、処置前期間（before）、1958--1972は処置後期間（after）である。
+
++-----------------+-----------------+-----------------+-----------------+
+|                 | Before          | After           | 差              |
+|                 |                 |                 |                 |
+|                 | 1948--1957      | 1958--1972      |                 |
++:================+:================+:================+:================+
+| EEC非加盟国     | A0              | A1              | A1-A0           |
++-----------------+-----------------+-----------------+-----------------+
+| EEC加盟国       | B0              | B1              | B1-B0           |
++-----------------+-----------------+-----------------+-----------------+
+| 差              | B0-A0           | B1-A1           | (B1-B0)-(A1-A0) |
++-----------------+-----------------+-----------------+-----------------+
+
+
+
+`table`により観測数の確認を行う。
+
+```{r}
+table(gravityIMFeu$treated, gravityIMFeu$after)
+```
+処置群は、ドイツ（DEU）、フランス（FRA）、イタリア（ ITA）、オランダ（NLD）の4カ国の12ペアである。処置前の期間については、処置群は12x10年=120観測値、処置後の期間については、処置群は12x18年=180観測値となっている。
+
+`dplyr`パッケージをインストールして、記述統計の確認を行う。
+```
+install.packages("dplyr")
+```
+
+まず記述統計のデータ`des`を作成する。その後、処置群と制御群の貿易の推移を`plot`関数で折れ線グラフにする。
+
+```{r}
+library(dplyr)
+des <- gravityIMFeu %>%
+group_by(treated, after) %>%
+summarise(mean = mean(log(tradeflow_imf_d)), sd = sd(log(tradeflow_imf_d))) 
+
+treated <- subset(des,treated==1)
+control <- subset(des,treated==0)
+
+plot(treated$after, treated$mean,type = "o", ylim=c(8,15), col=4, xlab = "period", ylab="Trade values")
+points(control$after,control$mean,type = "o", col=1)
+text(0.5,13,"treated")
+text(0.5,10,"control")
+
+```
+
+
+# 伝統的重力方程式に基づく推定
+
+## 単純な2 x 2 DiD -- `Base R`
+
+まず、OLS推定で、単純な2 x 2 の古典的なDiDで、EU加盟の効果を推定する。処置変数treatedと処置後を表すafterの交差項treated \* afterは、処置後の期間のEEC域内貿易であれば1をとる。
+
+```{r}
+did <- lm(log(tradeflow_imf_d) ~  treated * after
+          + log(gdp_o) + log(gdp_d) + log(dist), data = gravityIMFeu)
+
+```
+
+## TWFE (OLS) -- `Base R`
+
+観測単位（貿易国ペア）と時間（年）両方の固定効果（ダミー変数）を加えて、処置効果を推定する「２元（双方向）固定効果モデル」 (TWFE model: two-way fixed effects model) が近年使用されることが多い。
+
+TWFEモデルをBase RでOLS推定するコードは以下の通りである。
+
+```{r}
+twfe <- lm(log(tradeflow_imf_d) ~ treated_after 
+           + log(gdp_o) + log(gdp_d)
+           + factor(pair) + factor(year), data = gravityIMFeu)
+
+```
+
+## TWFE (OLS) -- `fixest`
+
+TWFEモデルを`fixest`でOLS推定するコードは以下の通りである。
+
+```{r}
+twfe1 <- feols(log(tradeflow_imf_d) ~ treated_after 
+           + log(gdp_o) + log(gdp_d)
+           | pair + year, 
+           vcov = ~ iso3_o + iso3_d,
+           data = gravityIMFeu)
+
+```
+
+## TWFE (PPML) --`fixest`
+
+TWFEモデルを`fixest`でPPML推定するコードは以下の通りである。
+
+```{r}
+library(fixest)
+twfe2 <- fepois(tradeflow_imf_d  ~ treated_after 
+                + log(gdp_o) + log(gdp_d) 
+                | pair + year, 
+                vcov = ~ iso3_o + iso3_d,
+                data = gravityIMFeu)
+
+```
+
+# 固定効果アプローチに基づく推定
+
+## TWFE (PPML) --`fixest`
+
+TWFEモデルを`fixest`で固定効果アプローチでPPML推定するコードは以下の通りである。
+
+```{r}
+library(fixest)
+twfe3 <- fepois(tradeflow_imf_d  ~ treated_after 
+                | iso3_o^year + iso3_d^year + pair + year,
+                vcov = ~ iso3_o + iso3_d,
+                data = gravityIMFeu)
+
+```
+
+ここで、以下のように`year`を固定効果に指定しなくても同じ結果が得られる。これは、`iso3_o^year`もしくは、`iso3_d^year`を固定効果に指定しているため、`year`の固定効果も自動的に含まれるからである。ただ、推定結果表で、`year`の固定効果を明示するために、上のコードでは、に`year`を固定効果に指定した。
+
+```
+twfe3 <- fepois(tradeflow_imf_d  ~ treated_after 
+                | iso3_o^year + iso3_d^year + pair,
+                vcov = ~ iso3_o + iso3_d,
+                data = gravityIMFeu)
+```
+
+# 結果の比較
+
+`modelsummary`を使って、推定結果の比較を行う。
+
+```{r}
+library(modelsummary)
+
+coef_rename = c("treated × after" = "treated × after", "treated:after" = "treated × after", "treated_after" = "treated × after")
+
+models <- list("2x2 DiD \ (GDP)" = did, "TWFE-OLS \ (GDP)" = twfe1,
+               "TWFE-PPML \ (GDP)" = twfe2, "TWFE-PPML \ (固定効果)" = twfe3)
+
+modelsummary(models, 
+             stars = TRUE,
+             coef_omit = "Intercept|.*factor",
+             coef_rename = coef_rename,
+             gof_omit = 'DF|Deviance|Log.Lik.|RMSE|AIC|BIC|R2 Within|R2 Within Adj.	')
+```
+
+`modelplot`を用いて係数プロットを作成し、モデルを比較する。ここで、`coef_rename`を使って、変数の表示名を統一化している。 また、`coef_omit = "^(?!.*treated|.*after)"`によって、treatedもしくはafterを含まない変数はのぞいている。
+
+```{r}
+
+coef_rename = c("treated × after" = "treated × after", "treated:after" = "treated × after", "treated_after" = "treated × after")
+
+modelplot(models, coef_omit = "^(?!.*treated|.*after)" ,
+          coef_rename =coef_rename)
+```
+
+
+# 参考文献
+
+::: {#refs}
+:::
+
+# 補論
+
+モデルの名前を推定結果表の表頭に記す別の方法として、`tibble`パッケージの`tibble`関数で、表頭のデータフレームを作成することもできる。 この場合、`attr(rows, 'position') <- c(1, 1)`と、一番最初にモデルの名前を表示するように、設定する。
+
+`tibble`をインストールしていない場合は、以下でインストールする。
+
+```         
+install.packages("tibble")
+```
+
+以下のコードで、モデルの名前を推定結果表の表頭に記すことができる。
+
+```{r}
+
+
+library(modelsummary)
+library(tibble)
+rows <- tibble(
+  a = "Model",
+  b = "2x2 DiD",
+  c = "TWFE-OLS",
+  d = "TWFE-PPML",
+  e = "TWFE-PPML",
+)
+attr(rows, 'position') <- c(1, 1)
+modelsummary(list(did, twfe1, twfe2, twfe3), 
+             stars = TRUE,
+             coef_omit = "Intercept|.*factor",
+             gof_omit = 'DF|Deviance|Log.Lik.|RMSE|AIC|BIC|R2 Within|R2 Within Adj.	',
+             add_rows = rows)
+```
+
+```{r}
+
+```
