@@ -46,7 +46,7 @@
 
 - 第2回以降以下のトピックを１つずつ進めて行ければ理想的ですが、実際には状況を見ながら、できる範囲で進めていきます。
 - 実習に用いるデータは[ここ](R)からダウンロードできます。
-- Posit Cloudのプロジェクトページ見本は、[こちら](https://posit.cloud/content/8176658)にあります。
+- Posit Cloudのプロジェクトページ見本は、[こちら](https://posit.cloud/content/8176658)にあります。[ここ](8176658)からダウンロードもできます。
 
 1. [貿易データの分析](https://rpubs.com/ayumuR/trade_data)
 2. [伝統的な重力方程式の推定](https://rpubs.com/ayumuR/gravity_explanation)
