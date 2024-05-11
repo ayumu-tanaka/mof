@@ -97,7 +97,7 @@ summary(ols)
 ## 連続変数 
 推定結果において、たとえば、輸出国のGDP (lgdp_exporter) の推定係数は$\hat{\alpha}=1.226$になっている。これは、以下のような関係にあると言える。 
 $$
-\frac{\partial \hat{輸入額}}{\partial 輸出国のGDP}  =   \hat{\alpha}=1.226
+\frac{\partial \hat{\mathrm{ln}輸入額}}{\partial \mathrm{ln}輸出国のGDP}  =   \hat{\alpha}=1.226
 $$ 
 また、対数微分の公式
 $$

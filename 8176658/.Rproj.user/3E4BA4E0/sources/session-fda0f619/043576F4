@@ -3,7 +3,7 @@
     "path": "/cloud/project/02_gravity_explanation.Rmd",
     "project_path": "02_gravity_explanation.Rmd",
     "type": "r_markdown",
-    "hash": "0",
+    "hash": "114561050",
     "contents": "",
     "dirty": false,
     "created": 1715345914382.0,
@@ -11,14 +11,17 @@
     "relative_order": 1,
     "properties": {
         "source_window_id": "",
-        "Source": "Source"
+        "Source": "Source",
+        "docOutlineVisible": "1",
+        "cursorPosition": "99,57",
+        "scrollLine": "98"
     },
     "folds": "",
-    "lastKnownWriteTime": 1715257435,
+    "lastKnownWriteTime": 1715406306,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1715257435,
+    "last_content_update": 1715406307005,
     "read_only": false,
     "read_only_alternatives": []
 }

@@ -18,6 +18,7 @@ install.packages("doBy")
 install.packages("stargazer")
 install.packages("fixest")
 install.packages("modelsummary")
+install.packages("estimatr")
 
 # 地図系
 install.packages("rworldmap")
