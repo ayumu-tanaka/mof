@@ -7,10 +7,13 @@ install.packages("knitr")
 
 # データ読み込み
 install.packages("readr")
+install.packages("data.table")
+install.packages("haven")
 
 # データ整形・グラフ 
 install.packages("tidyverse")
-install.packages("ggplot2") #"tidyverse"をインストールすれば通常"ggplot2"のインストールは不要
+#install.packages("ggplot2") #"tidyverse"をインストールすれば通常"ggplot2"のインストールは不要
+#install.packages("tibble") #"tidyverse"をインストールすれば通常"tibble"のインストールは不要
 install.packages("plotly")
 install.packages("doBy")
 
@@ -22,4 +25,6 @@ install.packages("estimatr")
 
 # 地図系
 install.packages("rworldmap")
+install.packages("sf")
+
 
