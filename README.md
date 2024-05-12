@@ -7,7 +7,7 @@
 
 ## 講義計画・講義内容
 
-- 教科書に沿って講義します。毎回、R（[Posit Cloud](https://posit.cloud)）による実習を行います。
+- 教科書に沿って講義します。毎回、R（[Posit Cloud](https://posit.cloud)）による実習を行います。教科書45分、R実習40分。
 - 状況に応じて、内容や進度を変更します。
 - 講義資料を随時更新（変更・追加等）する可能性があります。
 - 講義資料は本研修のために公開しており、研修生限りとし、第３者に提供しないようにお願いします。
@@ -56,9 +56,9 @@
 6. [重力方程式を用いた多期間差の差推定](https://rpubs.com/ayumuR/gravity_fixest_es)  担当：
 7. [ggplot2で貿易フローの地図を作成](https://rpubs.com/ayumuR/trade_flow_ggplot2)  担当：
 
-#### 参考
+### 参考
 - [R Markdown入門](https://kazutan.github.io/kazutanR/Rmd_intro.html)
-- [RStudio入門](https://shunichinomura.github.io/cloud.html)
+- [Posit Cloud入門](https://shunichinomura.github.io/cloud.html)
 
 
 ## 教科書
@@ -74,15 +74,4 @@
 その他、教科書巻末に文献紹介があります。
 
 
-
-
-
-  
-　　
-　　
-　　
-　　
-　　
-　　
-　　
 
