@@ -41,7 +41,6 @@
 - [R03_Posit_Cloud_Project作成とDownload方法.pdf](R_practice/R03_Posit_Cloud_Project作成とDownload方法.pdf)
 - [R04_R_Markdownの使い方.pdf](R_practice/R04_R_Markdownの使い方.pdf)
 - [R05_Data読み込み方法.pdf](R_practice/R05_Data読み込み方法.pdf)  | [trade2013.csv](R_practice//trade2013.csv)
-
 - [R06_packagesのインストール方法.pdf](R_practice/R06_packagesのインストール方法.pdf)  
 
 ### 重力方程式
