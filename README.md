@@ -51,9 +51,9 @@
 
 1. [貿易データの分析](https://rpubs.com/ayumuR/trade_data)  担当：田中さん
 2. [伝統的な重力方程式の推定](https://rpubs.com/ayumuR/gravity_explanation)  担当：伊藤さん
-3. [現代的な重力方程式の推定 with fixest](https://rpubs.com/ayumuR/gravity_fixest)  担当：浦田さん、福室さん
+3. [現代的な重力方程式の推定 with fixest](https://rpubs.com/ayumuR/gravity_fixest)  担当：山口さん、福室さん
 4. [現代的な重力方程式のパネル推定 with fixest](https://rpubs.com/ayumuR/gravity_fixest_panel)  担当：正司さん、吉田さん
-5. [重力方程式を用いた2元固定効果差の差推定](https://rpubs.com/ayumuR/gravity_fixest_twfe)  担当：秋元さん、山口さん
+5. [重力方程式を用いた2元固定効果差の差推定](https://rpubs.com/ayumuR/gravity_fixest_twfe)  担当：秋元さん、浦田さん
 6. [重力方程式を用いた多期間差の差推定](https://rpubs.com/ayumuR/gravity_fixest_es)  担当：多部さん、細江さん
 7. [ggplot2で貿易フローの地図を作成](https://rpubs.com/ayumuR/trade_flow_ggplot2)  担当：知田さん、野坂さん
 
