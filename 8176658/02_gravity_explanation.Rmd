@@ -3,12 +3,14 @@ title: "伝統的な重力方程式の推定"
 author: "田中 鮎夢"
 date: "`r Sys.Date()`"
 output:
+  word_document:
+    toc: true
   html_document:
     toc: true
     toc_float: true
-    number_sections: yes
+    number_sections: true
 bibliography: ref.bib
-link-citations: yes
+link-citations: true
 ---
 
 ```{r setup-chunk, include=FALSE}

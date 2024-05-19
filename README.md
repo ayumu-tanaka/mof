@@ -28,8 +28,10 @@
 - 締切・提出先：財総研。
 - 以下のいずれか１つ。標準はテーマ１。逃げ道としてテーマ２。
 - テーマ1: 重力方程式を用いた政策効果分析について。R/Rマークダウンによる。詳細は5/20に説明予定。
+  - [レポート・テンプレート圧縮ファイル](report.zip)を用いて下さい。
 - テーマ2: 教科書の章末にある「Report assignment レポート課題」から１つ選択。
   - テーマ2選択の場合の評価上限は、C（可）になります。
+  - Word（タイトル・氏名明記）で作成して下さい。
 
 ## R実習
 
@@ -41,7 +43,8 @@
 - [R03_Posit_Cloud_Project作成とDownload方法.pdf](R_practice/R03_Posit_Cloud_Project作成とDownload方法.pdf)
 - [R04_R_Markdownの使い方.pdf](R_practice/R04_R_Markdownの使い方.pdf)
 - [R05_Data読み込み方法.pdf](R_practice/R05_Data読み込み方法.pdf)  | [trade2013.csv](R_practice//trade2013.csv)
-- [R06_packagesのインストール方法.pdf](R_practice/R06_packagesのインストール方法.pdf)  
+- [R06_packagesのインストール方法.pdf](R_practice/R06_packagesのインストール方法.pdf)  **5/13追加**
+- [R07_reference作成方法.pdf](R_practice/R07_reference作成方法.pdf)  **5/20追加、6/4説明予定**
 
 ### 重力方程式
 
