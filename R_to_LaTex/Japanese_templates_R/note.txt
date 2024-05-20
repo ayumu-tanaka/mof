@@ -1,0 +1,8 @@
+%Compiler: Latex
+%以下のテンプレートを日本語仕様に変更
+    %https://ja.overleaf.com/latex/templates/example-project/qzykddzqhkwk
+
+%以下のサイトに従って、「latexmkrc」ファイルを作成。
+    %Overleafを使った日本語論文の作成
+    %https://qiita.com/fujino-fpu/items/d92d185da730e25743cb
+

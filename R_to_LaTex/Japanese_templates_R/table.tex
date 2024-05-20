@@ -1,0 +1,33 @@
+\begin{table}
+\centering
+\begin{tblr}[         %% tabularray outer open
+]                     %% tabularray outer close
+{                     %% tabularray inner open
+colspec={Q[]Q[]Q[]},
+column{1}={halign=l,},
+column{2}={halign=c,},
+column{3}={halign=c,},
+hline{12}={1,2,3}{solid, 0.05em, black},
+}                     %% tabularray inner close
+\toprule
+& (1) & (2) \\ \midrule %% TinyTableHeader
+(Intercept)     & \num{-33.751}    & \num{-33.751} \\
+& (\num{0.350})    & (\num{0.353}) \\
+lgdp\_exporter & \num{1.226}      & \num{1.226}   \\
+& (\num{0.008})    & (\num{0.008}) \\
+lgdp\_importer & \num{0.951}      & \num{0.951}   \\
+& (\num{0.008})    & (\num{0.008}) \\
+ldist           & \num{-1.374}     & \num{-1.374}  \\
+& (\num{0.022})    & (\num{0.020}) \\
+comlang\_off   & \num{1.293}      & \num{1.293}   \\
+& (\num{0.051})    & (\num{0.050}) \\
+Num.Obs.        & \num{19978}      & \num{19978}   \\
+R2              & \num{0.642}      & \num{0.642}   \\
+R2 Adj.         & \num{0.642}      & \num{0.642}   \\
+AIC             & \num{93181.8}    & \num{93181.8} \\
+BIC             & \num{93229.2}    & \num{93229.2} \\
+Log.Lik.        & \num{-46584.884} &                \\
+RMSE            & \num{2.49}       & \num{2.49}    \\
+\bottomrule
+\end{tblr}
+\end{table}
