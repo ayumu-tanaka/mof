@@ -66,7 +66,7 @@
 ### 参考
 - [R Markdown入門](https://kazutan.github.io/kazutanR/Rmd_intro.html)
 - [Posit Cloud入門](https://shunichinomura.github.io/cloud.html)
-
+- [財務省貿易統計の輸出データ](https://rpubs.com/ayumuR/mof_export)
 
 ## 教科書
 伊藤萬里・田中鮎夢（2023）[『現実からまなぶ国際経済学』](https://www.yuhikaku.co.jp/books/detail/9784641200012)（有斐閣）
