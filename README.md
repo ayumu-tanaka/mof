@@ -18,10 +18,13 @@
 1.	５月14日（火）15:20～16:50　　 [3 章 企業のグローバル化](slides/03企業のグローバル化.pptx)
 1.	５月20日（月）15:20～16:50　　 [4 章 技術が貿易を決める: リカード・モデル](slides/04技術が貿易を決めるリカードモデルv2.pptx) ＊レポート説明。
 1.	５月21日（火）15:20～16:50　　 [5 章 生産要素が貿易を決める: 要素比率理論](05生産要素が貿易を決めるv2.pptx)
-1.	５月27日（月）15:20～16:50　　 [7 章 新・新貿易理論](slides/07新・新貿易理論.pptx)　参考）[新貿易理論](slides/trade2-01-new-trade-theory.pdf)、[税関データの利用についての若杉先生のスライド](slides/comment2024_Prof_Wakasugi.pdf)
+1.	５月27日（月）15:20～16:50　　 [7 章 新・新貿易理論](slides/07新・新貿易理論.pptx)
 1.	５月28日（火）15:20～16:50　　 [8 章 貿易政策（基礎編）](slides/08貿易政策_基礎編.pptx)
 1.	６月３日（月）15:20～16:50　　 [11 章 グローバル化と格差](slides/11グローバル化と格差.pptx)
 1.	６月４日（火）15:20～16:50　　 重力方程式と研究レポートの書き方: Google Scholarとの連携等
+
+  - 参考）[新貿易理論](slides/trade2-01-new-trade-theory.pdf)
+  - 参考）[税関データの利用についての若杉先生のスライド](slides/comment2024_Prof_Wakasugi.pdf)
 
 ### レポート
 - 字数：1000字以上。
@@ -63,7 +66,7 @@
 ### 参考
 - [R Markdown入門](https://kazutan.github.io/kazutanR/Rmd_intro.html)
 - [Posit Cloud入門](https://shunichinomura.github.io/cloud.html)
-
+- [財務省貿易統計の輸出データ](https://rpubs.com/ayumuR/mof_export)
 
 ## 教科書
 伊藤萬里・田中鮎夢（2023）[『現実からまなぶ国際経済学』](https://www.yuhikaku.co.jp/books/detail/9784641200012)（有斐閣）
