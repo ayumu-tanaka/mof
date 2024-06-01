@@ -14,7 +14,8 @@ link-citations: true
 ```{r setup-chunk, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, #コードを表示
                       cache = FALSE, #キャッシュを残さない
-                      message=FALSE, warning=FALSE)
+                      message=FALSE, 
+                      warning=FALSE)
 
 ```
 
