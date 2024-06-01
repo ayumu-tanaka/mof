@@ -26,7 +26,7 @@ knitr::opts_chunk$set(echo = TRUE, #コードを表示
 
 `fixest`パッケージは、多くの固定効果を含む推定を行うための関数群を提供している。主な2つの関数は、線形モデル用の`feols`と一般化線形モデル用の`feglm`である。また、関数 `fepois`は、ポアソン最尤推定用のエイリアスである。つまり、関数`fepois`は、実際には`family = poisson`というオプションをつけた関数`feglm`のエイリアスである。また、推定値の標準誤差を簡単かつ直感的にクラスタ化することができる（最大4方向）。さらに関数`etable`により、複数の推定結果をdata.frameまたはLaTexテーブルにシームレスにエクスポートできる。
 
-パッケージのインストールのインストールは以下のコードで行われる。
+パッケージのインストールは以下のコードで行われる。
 
 ```
 install.packages("fixest")
@@ -147,7 +147,7 @@ Stataで同じ推定を行うには次のコードを`ppmlhdfe`をインスト�
 ssc install ppmlhdfe
 ```
 
-データを読み込み、以下のコードで、PPML推定を行う。
+以下のコードで、データを読み込み、PPML推定を行う。
 
 ```
 import excel using https://ayumu-tanaka.github.io/teaching/gravity_basic2017.xlsx,clear firstrow
@@ -195,5 +195,6 @@ etable(gravity_ols, gravity_pois, cluster = ~iso3_o + iso3_d, file = "Tables1.te
 
 
 
-# 参考文献
+# 参考文献 {-}
+
 
