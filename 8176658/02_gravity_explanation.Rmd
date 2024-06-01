@@ -3,8 +3,6 @@ title: "伝統的な重力方程式の推定"
 author: "田中 鮎夢"
 date: "`r Sys.Date()`"
 output:
-  word_document:
-    toc: true
   html_document:
     toc: true
     toc_float: true
@@ -20,11 +18,16 @@ knitr::opts_chunk$set(echo = TRUE, #コードを表示
 
 ```
 
-
 # 貿易データ
-本ページでは、重力方程式の基本的な推定方法を説明する。日本語の文献としては、重力方程式について、伊藤・田中『現実からまなぶ国際経済学』 や [田中「国際貿易と重力の意外な関係: 重力方程式の基本」](https://researchmap.jp/ayumu-tanaka/misc/14570985) に説明がある。
 
-[gravity.xlsx データ](https://ayumu-tanaka.github.io/teaching/gravity.xlsx)には、2005 年の 1年間の世界の2国間の貿易額が収録されている。
+本ページでは、重力方程式の基本的な推定方法を説明する。日本語の文献としては、重力方程式について、伊藤・田中『現実からまなぶ国際経済学』
+や [田中「国際貿易と重力の意外な関係:
+重力方程式の基本」](https://researchmap.jp/ayumu-tanaka/misc/14570985)
+に説明がある。
+
+[gravity.xlsx
+データ](https://ayumu-tanaka.github.io/teaching/gravity.xlsx)には、2005
+年の 1年間の世界の2国間の貿易額が収録されている。
 
 Rでデータを読み込む。
 
@@ -35,7 +38,8 @@ head(gravity)
 ```
 
 オンラインから直接データを読み込みたい場合は、パッケージ`gdata`をインストールした上で、以下のコードを用いる。
-```
+
+```         
 # install.packages("gdata")
 library(gdata)
 library(readxl)
@@ -44,7 +48,11 @@ download.file("https://ayumu-tanaka.github.io/teaching/gravity.xlsx","gravity.xl
 gravity <- read_excel("gravity.xlsx")
 ```
 
-変数 importer は輸入国の ISO コードと呼ばれる 3桁の国コードである。同様に、exporter は輸出国 の ISO コードである。例えば、日本の ISO コードは JPN、アメリカの ISO コードは USA である。また、ISOコード（exporter, importer）の他に、輸入額（imports）、輸出国のGDP（gdp_exporter）、輸入国のGDP（gdp_importer）、輸出国と輸入国の間の距離（dist）が含まれている。
+変数 importer は輸入国の ISO コードと呼ばれる
+3桁の国コードである。同様に、exporter は輸出国 の ISO
+コードである。例えば、日本の ISO コードは JPN、アメリカの ISO コードは
+USA である。また、ISOコード（exporter,
+importer）の他に、輸入額（imports）、輸出国のGDP（gdp_exporter）、輸入国のGDP（gdp_importer）、輸出国と輸入国の間の距離（dist）が含まれている。
 
 # 対数変換
 
@@ -52,7 +60,9 @@ R で次のような重力方程式を推定することを考える。
 
 $$
 輸入額 = 定数 \times \frac{輸出国のGDP^{\alpha} \times 輸出国のGDP^{\beta}}{輸出国と輸入国の間の距離^{\gamma}} \times e ^{\delta \times 言語の共通性}
-$$ この式は非線形のためコンピューターの能力上、推定が難しい。そのため、従来は両辺の対数をとって、線形にされてきた。線形にされた式の推定は最小二乗法で比較的簡単に推定できる。そこでまず、回帰分析に用いる変数の対数を取る。Rのコードは次の通りである。
+$$
+
+この式は非線形のためコンピューターの能力上、推定が難しかった。そのため、従来は両辺の対数をとって、線形にされてきた。線形にされた式の推定は最小二乗法で比較的簡単に推定できる。そこでまず、回帰分析に用いる変数の対数を取る。Rのコードは次の通りである。
 
 ```{r}
 gravity$limports <- log(gravity$imports)
@@ -61,7 +71,8 @@ gravity$lgdp_importer <- log(gravity$gdp_importer)
 gravity$ldist <- log(gravity$dist)
 ```
 
-ここで、0より大きい値しか対数値にできないことに注意が必要である。 そのため、輸入額が0より大きい値のサンプルを作成しておく。
+ここで、0より大きい値しか対数値にできないことに注意が必要である。
+そのため、輸入額が0より大きい値のサンプルを作成しておく。
 
 ```{r}
 gravity2 <- subset(gravity,gravity$imports>0)
@@ -69,7 +80,8 @@ gravity2 <- subset(gravity,gravity$imports>0)
 
 # 推定
 
-通常、貿易データは不均一分散の性質を持つので、デフォルトの`lm`で推定するのではなく、`lm_robust`で推定する。そのために、@blair2018package が開発した パッケージ`estimatr`をインストールする。
+通常、貿易データは不均一分散の性質を持つので、デフォルトの`lm`で推定するのではなく、`lm_robust`で推定する。そのために、@blair2018package
+が開発した パッケージ`estimatr`をインストールする。
 
 ```{r eval=FALSE, include=TRUE}
 install.packages("estimatr")
@@ -90,19 +102,19 @@ summary(ols)
 
 なお、回帰分析は、以下のコードでも実行できる。
 
-```
+```         
 # ols<-lm_robust(gravity2$limports ~ gravity2$lgdp_exporter + gravity2$lgdp_importer + gravity2$ldist + gravity2$comlang_off)
 ```
 
 # 推定結果の解釈
 
-## 連続変数 
-推定結果において、たとえば、輸出国のGDP (lgdp_exporter) の推定係数は$\hat{\alpha}=1.226$になっている。これは、以下のような関係にあると言える。 
+## 連続変数
+
+推定結果において、たとえば、輸出国のGDP (lgdp_exporter)
+の推定係数は$\hat{\alpha}=1.226$になっている。これは、以下のような関係にあると言える。
 $$
 \frac{\partial \hat{\mathrm{ln}輸入額}}{\partial \mathrm{ln}輸出国のGDP}  =   \hat{\alpha}=1.226
-$$ 
-また、対数微分の公式
-$$
+$$ また、対数微分の公式 $$
 \frac{\mathrm{dln}x}{\mathrm{d}x}=\frac{1}{x}
 $$
 から、$\mathrm{dln}x=\frac{\mathrm{d}x}{x}$となるので、$\mathrm{dln}x$は変化率を表している。この関係を使って上の式を書き直すと、近似的に以下が成り立つ。
@@ -111,41 +123,39 @@ $$
 \frac{輸入額の変化率}{輸出国のGDPの変化率}  =   \hat{\alpha}=1.226
 $$
 
-この式は、弾性値（=Yの変化率/Xの変化率）の形になっている。そのため、輸出国のGDPが1\%大きくなれば、平均的に輸入額が1.226\%大きくなる傾向にあると表現できる。
+この式は、弾性値（=Yの変化率/Xの変化率）の形になっている。そのため、輸出国のGDPが1%大きくなれば、平均的に輸入額が1.226%大きくなる傾向にあると表現できる。
 
-## ダミー変数 
-また、言語の共通性 (comlang_off) の推定係数は$\hat{\delta}=1.293$である。もともと、言語の共通性以外の他の項を$B$としてまとめると、重力方程式の定式化から以下のような関係にある。
+## ダミー変数
+
+また、言語の共通性 (comlang_off)
+の推定係数は$\hat{\delta}=1.293$である。もともと、言語の共通性以外の他の項を$B$としてまとめると、重力方程式の定式化から以下のような関係にある。
 
 $$
 輸入額 = B \times e ^{\delta \times 言語の共通性}
-$$
-そのため、言語が共通の場合は、
-$$
+$$ そのため、言語が共通の場合は、 $$
 \hat{輸入額} = B \times e ^{1.293 \times 1} = B \times e ^{1.293}
-$$
-そのため、言語が共通ではない場合は、
-$$
+$$ そのため、言語が共通ではない場合は、 $$
 \hat{輸入額} = B \times e ^{1.293 \times 0} = B \times e ^{0} = B
-$$
-となる。言語が共通な場合は、
-$$
+$$ となる。言語が共通な場合は、 $$
 \frac{B \times e ^{1.293}}{B}=e ^{1.293}　\fallingdotseq　3.64
 $$
+
 より、平均的に`r round(exp(1.293),2)`倍貿易額が大きい傾向にあることが分かる。
 
 なお、以下のように計算している。
+
 ```{r}
 b <- exp(1.293)
 b
 ```
 
-
-
 # 推定結果の整形と表示1 with `modelsummary`
 
-[Regression Tables with estimatr](https://declaredesign.org/r/estimatr/articles/regression-tables.html)で説明されているように、`stargazer`ではなく、`Texreg`や`modelsummary`を用いた方が簡単に、`lm_robust`を用いた不均一分散頑健な推定結果を表示できる。
+[Regression Tables with
+estimatr](https://declaredesign.org/r/estimatr/articles/regression-tables.html)で説明されているように、`stargazer`ではなく、`Texreg`や`modelsummary`を用いた方が簡単に、`lm_robust`を用いた不均一分散頑健な推定結果を表示できる。
 
-ここでは、@arel2022modelsummary が開発した`modelsummary`を用いて、推定結果を表示する。
+ここでは、@arel2022modelsummary
+が開発した`modelsummary`を用いて、推定結果を表示する。
 
 ```{r}
 #install.packages("modelsummary")
@@ -164,7 +174,8 @@ modelsummary(list(ols1, ols2), stars = TRUE)
 
 ```
 
-より手の込んだ推定結果表も作成できる。 参考：[modelsummary: regression tables](https://vincentarelbundock.github.io/modelsummary/articles/modelsummary.html)
+より手の込んだ推定結果表も作成できる。 参考：[modelsummary: regression
+tables](https://vincentarelbundock.github.io/modelsummary/articles/modelsummary.html)
 
 ```{r}
 modelsummary(
@@ -179,23 +190,44 @@ modelsummary(
 
 # 推定結果のLaTex形式出力
 
+多くの経済学者が、Microsoft Wordではなく、LaTexを用いて論文を執筆している。最近では、LaTexをオンラインで用いることができる[Overleaf](https://ja.overleaf.com/) (Online LaTeX Editor)が人気である。Overleafは、無料でアカウントを作成して利用できる。Posit Cloudで作成した推定結果表をOverleafにアップロードして、論文に組み込む作業を考えてみる。
+
+
+まず、`modelsummary`を用いて、以下のコードのように推定結果をLaTex形式で出力することができる。
+
 
 ```{r message=FALSE, warning=FALSE}
 modelsummary(list(ols1, ols2), output = "table.tex")
 ```
-LaTexのpreambleに以下のコード記載することが必要。
 
-```
-\usepackage{booktabs}
+生成された"table.tex"をOverleaf  にアップロードして、LaTex形式で表を作成することができる。なお、LaTexのpreambleに以下のコード記載することが必要である。
+
+```         
+\usepackage{tabularray}
+\UseTblrLibrary{booktabs} 
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{wrapfig} % if necessary
+\usepackage{float}
+\usepackage{colortbl} % if necessary
+\usepackage{pdflscape}
+\usepackage{tabu}
+\usepackage{threeparttable}
+\usepackage{threeparttablex}
+\usepackage[normalem]{ulem}
+\usepackage{makecell}
+\usepackage{xcolor} % if necessary
 \usepackage{siunitx}
-\newcolumntype{d}{S[
-    input-open-uncertainty=,
-    input-close-uncertainty=,
-    parse-numbers = false,
-    table-align-text-pre=false,
-    table-align-text-post=false
- ]}
 ```
+
+上記ののpreambleは、`modelsummary`のバージョン2.0.0の場合のものである。
+
+Overleafのサンプルページは[こちら](https://ja.overleaf.com/read/sssbvzmxwjsw#ce9672)にある。
+
+なお、英語の文書の場合、RマークダウンをKnit to PDF により、PDFファイルに変換する過程で、LaTex形式に変換されている。そのため、RマークダウンをPDFに変換することで、LaTex形式の表を生成することもできる。しかし、日本語の文書の場合、Knit to PDFでは、文字コードに起因するエラーが発生して、対処が難しい。
+
+Overleafを使うことで、Posit Cloudで生成したLaTex形式の表を含む日本語の論文を作成することも比較的容易にできる。
 
 
 # 係数プロット with `modelplot`
@@ -206,8 +238,7 @@ modelplot(list(ols1, ols2), coef_omit = "Intercept")
 ggsave("coefplot.png")
 ```
 
-
-# 推定結果の整形と表示2 with `stargazer`
+# 補論：推定結果の整形と表示2 with `stargazer` {-}
 
 なお、`stargazer`を用いた表の作成は、`stargazer`が`lm_robust`に対応していないためそのままではできない。
 
@@ -232,6 +263,15 @@ stargazer(ols1, type="text",se = starprep(ols2))
 stargazer(ols1, type="text")
 ```
 
-# 参考文献
+# 補論：データの出所 {-}
+
+UN and WTO. "A Practical Guide to Trade Policy Analysis," Chapter 3 で用いられているデータ「gravity.dta」をExcelに変換したデータを本文書では用いた。元データは以下のサイトより無料で入手できる。
+
+- https://www.wto.org/english/res_e/publications_e/practical_guide12_e.htm
+
+本文書で用いたデータのStata版「gravity.dta」は上記のサイトで提供されているdo-file「BuildingDatabaseApproach.do」を実行することで生成される。[有斐閣の教科書サポートページ](https://www.yuhikaku.co.jp/yuhikaku_pr/y-knot/ws/20001p_03/)でも、データ「gravity.dta」を提供しているので、ダウンロードして用いることもできる。
+
+- [gravity.dta](https://www.yuhikaku.co.jp/yuhikaku_pr/y-knot/files/2022/12/gravity.dta)
 
 
+# 参考文献 {-}
