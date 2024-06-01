@@ -7,11 +7,13 @@ output:
     toc: yes
     toc_float: yes
     number_sections: yes
+bibliography: ref.bib
+link-citations: yes
 ---
 
 ```{r setup-chunk, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, #コードを表示
-                      cache = FALSE, #キャッシュを残さない
+                      cache = TRUE, #キャッシュを残す
                       message=FALSE, warning=FALSE)
 
 ```
@@ -19,7 +21,7 @@ knitr::opts_chunk$set(echo = TRUE, #コードを表示
 
 # 貿易データの読み込み
 
-[trade2013.csv](https://ayumu-tanaka.github.io/teaching/trade2013.csv)には、2013年の世界の2国間の貿易データが含まれている。
+本文書では、@glick2016currency で用いられた貿易データから、2013年のデータを切りとって分析に用いる。同データ[trade2013.csv](https://ayumu-tanaka.github.io/teaching/trade2013.csv)には、2013年の世界の2国間の貿易データが含まれている。
 含まれている変数は以下の通りである。
 
 - 輸出国: country1
@@ -29,6 +31,7 @@ knitr::opts_chunk$set(echo = TRUE, #コードを表示
 - 輸入国のGDPの対数値: lgdp2
 - 輸出国と輸入国の間の距離: ldist
 
+本データは、以下のコードを使って読み込むことができる。
 
 ```{r}
 library(readr)
@@ -67,10 +70,10 @@ library(stargazer)
 stargazer(model1, type = "text", title = "Results")
 ```
 
-推定結果を以下の式が成り立つことを示す。
+推定結果は、以下の式が成り立つことを示す。
 
 $$
-ltrade = -40.974 + 1.151l \times gdp1 + 1.036 \times lgdp2 − -1.525 \times ldist + 残差
+ltrade = -40.974 + 1.151l \times lgdp1 + 1.036 \times lgdp2 - 1.525 \times ldist + 残差
 $$
 
 つまり、以下の関係が成り立っている。
@@ -115,12 +118,21 @@ dev.off()
 
 # 散布図 with `ggplot2`
 
+Base Rの`plot`関数でも散布図を作成できたが、`ggplot2`パッケージを使うと、グラフのカスタマイズが容易になる。
+
+- 以下のコードは、`ggplot2`を使って散布図を作成している。
+- **行末**に`+`をつけることで、グラフに要素を追加している。
+  - **行頭**に`+`をつけると、エラーが発生するので注意が必要である。
+- `geom_smooth`関数を使って回帰直線を追加している。
+- `theme_bw()`によりグラフにシンプルな白黒のテーマを適用している。
+
+
 ```{r ggplot2}
 library("ggplot2")
 
 # グラフ生成
-graph <- ggplot(trade2013, aes(x = ldist, y = ltrade)) +
-  geom_point()+
+graph <- ggplot(trade2013, aes(x = ldist, y = ltrade)) + 
+  geom_point() +
   geom_smooth(se = TRUE, method = 'lm') +
   theme_bw()
 
@@ -133,6 +145,10 @@ ggsave('trade_data02.png', graph, width = 5, height = 4, units = 'cm')
 
 
 # 動的な散布図 with `plotly`
+
+`plotly`パッケージを用いると、`ggplot2`で作成したグラフを動的に表示することができる。ここでは、`ggplot2`で先に作った「graph」オブジェクトを`plotly`パッケージで動的にグラフにする。
+
+なお、`plotly`パッケージを使うと、動的なグラフを含むため、Knit to HTMLはできるが、Knit to Wordはできなくなる。
 
 ```{r plotly}
 library("plotly")
@@ -167,7 +183,7 @@ output:
 knitr::opts_chunk$set(dev = c('pdf', 'png'), #画像をpng/pdfで保存
                       dpi = 100, #画像画質の設定
                       echo = TRUE, #コードを表示
-                      cache = FALSE, #TRUEにするとキャッシュを残し、繰り返し実行を回避
+                      cache = TRUE, #TRUEにするとキャッシュを残し、繰り返し実行を回避
                       message=FALSE, warning=FALSE)
 
 ```
@@ -185,3 +201,12 @@ knitr::opts_chunk$set(dev = c('pdf', 'png'), #画像をpng/pdfで保存
 ggsave('figure.pdf', グラフ名)
 ```
 
+# 補論: データの出所について {-}
+
+@glick2016currency のデータは、Andrew Roseのウェブサイトからダウンロードできる。
+
+- [Andrew Rose's Website](https://www.andrewkrose.net)
+  - [Glick2Data.zip](https://www.andrewkrose.net/assets/documents/Currency%20Union/Effects%20on%20Trade/Currency%20Unions%20and%20Trade%20A%20Post-EMU%20Reassessment/Glick2Data.zip)を解凍して得られるStata形式のデータ「dataa1.dta」から2013年のデータを切りとって、「trade2013.csv」データを作成した。
+
+
+# 参考文献 {-}
